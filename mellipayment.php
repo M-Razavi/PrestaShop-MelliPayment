@@ -160,6 +160,11 @@ class mellipayment extends PaymentModule {
 		
 	}
 	
+	//    public function displayErrors() {
+	//        foreach ($this->_postErrors AS $err)
+	//            $this->_html .= '<div class="alert error">' . $err . '</div>';
+	//    }
+	
 	public function displayErrors() {
 		$nbErrors = sizeof($this->_postErrors);
 		$this->_html .= '
@@ -211,31 +216,20 @@ class mellipayment extends PaymentModule {
 		return true;
 	}
 	
-	public function hookInvoice($params) {
+	function hookInvoice($params) {
 		$id_order = $params['id_order'];
 		
 		global $smarty;
-		$onlinePaymentDetails = $this->readOnlinePaymentDetails($id_order);
+		$paymentCarddetails = $this->readPaymentcarddetails($id_order);
 		
 		$smarty->assign(array(
-					'transID ' => $onlinePaymentDetails['trans_id '],
-					'timeStart' => $onlinePaymentDetails['time_start'],
-					'paymentAmount' => $onlinePaymentDetails['payment'],
+					'cardHoldername' => $paymentCarddetails['cardholdername'],
+					'cardNumber' => $paymentCarddetails['cardnumber'],
 					'id_order' => $id_order,
 					'this_page' => $_SERVER['REQUEST_URI'],
 					'this_path' => $this->_path,
 					'this_path_ssl' => Configuration::get('PS_FO_PROTOCOL') . $_SERVER['HTTP_HOST'] . __PS_BASE_URI__ . "modules/{$this->name}/"));
 		return $this->display(__FILE__, 'invoice_block.tpl');
-	}
-	
-	private function readOnlinePaymentDetails($intOrderID) {
-		$db = Db::getInstance();
-		$result = $db->ExecuteS("SELECT * FROM `" . _DB_PREFIX_ . "module_mellipayment` WHERE `order_id` =".intval($intOrderID).";");
-		if (!$result) 
-		{
-			return false;
-		}
-		return $result[0];
 	}
 	
 	public function hookPayment($params) {
@@ -254,7 +248,8 @@ class mellipayment extends PaymentModule {
 		return $this->display(__FILE__, 'confirmation.tpl');
 	}
 	
-	private function hmac ($key, $data)	{
+	private function hmac ($key, $data)
+	{
 		return (bin2hex (mhash(MHASH_MD5, $data, $key)));
 	}
 	
@@ -400,7 +395,8 @@ class mellipayment extends PaymentModule {
 		return $result;
 	}
 	
-	private function checkOrderInfo($sequence)	{
+	private function checkOrderInfo($sequence)
+	{
 		$db = Db::getInstance();
 		$search = $db->ExecuteS("SELECT sequence FROM `" . _DB_PREFIX_ . "module_mellipayment` WHERE sequence = '$sequence'");
 		if (!$search) {
@@ -411,7 +407,8 @@ class mellipayment extends PaymentModule {
 		return $redult['sequence'];
 	}
 	
-	private function checkOrderInfoAll($sequence)	{
+	private function checkOrderInfoAll($sequence)
+	{
 		$db = Db::getInstance();
 		$search = $db->ExecuteS("SELECT * FROM `" . _DB_PREFIX_ . "module_mellipayment` WHERE sequence = '$sequence'");
 		if (!$search) {
@@ -420,7 +417,8 @@ class mellipayment extends PaymentModule {
 		return $search[0];
 	}
 	
-	private function loadIncompleteOrderInfo()	{
+	private function loadIncompleteOrderInfo()
+	{
 		$db = Db::getInstance();
 		$search = $db->ExecuteS("SELECT * FROM `" . _DB_PREFIX_ . "module_mellipayment` WHERE trans_id is NULL");
 		if (!$search) {
@@ -435,7 +433,8 @@ class mellipayment extends PaymentModule {
 		return $db->Execute($sQuery);
 	}
 	
-	private function verificationTransactions($x_fp_sequence,$x_fp_timestamp,$x_amount,$x_currency_code,$x_description)	{
+	private function verificationTransactions($x_fp_sequence,$x_fp_timestamp,$x_amount,$x_currency_code,$x_description)
+	{
 		$x_tran_key = $this->_TRANSKEY;
 		$x_login = $this->_ID;
 		
@@ -468,7 +467,8 @@ class mellipayment extends PaymentModule {
 		return $estore;
 	}	
 	
-	private function verificationOrders($sequence)	{
+	private function verificationOrders($sequence)
+	{
 		$x_description = Configuration::get('PS_SHOP_NAME');
 		$x_currency_code = $this->_CurrencyCode;
 		//$incompleteOrders=$this->loadIncompleteOrderInfo();
